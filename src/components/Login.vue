@@ -1,9 +1,24 @@
 <script>
+import axios from 'axios';
+
+axios.defaults.withCredentials = true;
 
 export default {
   data() {
     return {
+      userEmail: "",
+      userPassword: "",
+      
     }
+  },
+  methods: {
+    async userLogin() {
+      await axios.get('http://localhost:8000/sanctum/csrf-cookie');
+      await axios.post('http://localhost:8000/login', {
+        "email": this.userEmail,
+        "password": this.userPassword
+      });
+    },
   }
 }
 </script>
@@ -15,11 +30,11 @@ export default {
   </div>
 
   <div class="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
-    <form class="space-y-6" onsubmit="">
+    <form class="space-y-6" @submit.prevent="userLogin">
       <div>
         <label for="email" class="block text-sm/6 font-medium text-gray-900">Email address</label>
         <div class="mt-2">
-          <input id="email" name="email" type="email" autocomplete="email" required class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-slate-900 sm:text-sm/6">
+          <input id="email" name="email" type="email" autocomplete="email" required v-model="userEmail" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-slate-900 sm:text-sm/6">
         </div>
       </div>
 
@@ -31,7 +46,7 @@ export default {
           </div>
         </div>
         <div class="mt-2">
-          <input id="password" name="password" type="password" autocomplete="current-password" required class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-slate-900 sm:text-sm/6">
+          <input id="password" name="password" type="password" autocomplete="current-password" required v-model="userPassword" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-slate-900 sm:text-sm/6">
         </div>
       </div>
 
