@@ -2,29 +2,73 @@
 import axios from 'axios';
 
 axios.defaults.withCredentials = true;
+axios.defaults.baseURL = 'http://localhost:8000'
+// Aggiungi il token CSRF come header di default
 
 export default {
+  
   data() {
     return {
       userEmail: "",
       userPassword: "",
-      
+      loggedIn: false
     }
   },
+  mounted() {
+    this.verifySession();
+  },
+
   methods: {
-    async userLogin() {
-      await axios.get('http://localhost:8000/sanctum/csrf-cookie');
-      await axios.post('http://localhost:8000/login', {
-        "email": this.userEmail,
-        "password": this.userPassword
+
+    userLogin() {
+      axios.defaults.headers.common['X-XSRF-TOKEN'] = this.getCsrfTokenFromCookies();
+      axios.get('http://localhost:8000/sanctum/csrf-cookie');
+
+      axios.post('http://localhost:8000/login', {'email':this.userEmail, 'password': this.userPassword})
+      .then(response => {
+        console.log('Login riuscito:', response.data);
+        this.loggedIn = true;
+        this.userEmail = '';
+        this.userPassword = '';
+      })
+      .catch(error => {
+          console.error('Errore durante il login:', error.response.data);
       });
+
+      
     },
-  }
+
+    userLogout() {
+      axios.defaults.headers.common['X-XSRF-TOKEN'] = this.getCsrfTokenFromCookies();
+      axios.post('http://localhost:8000/logout')
+      .then(response => {
+        console.log('Logout riuscito:', response.data);
+        this.loggedIn = false;
+      })
+    },
+
+    getCsrfTokenFromCookies() {
+      
+      const matches = document.cookie.match(/XSRF-TOKEN=([^;]+)/);
+      return matches ? decodeURIComponent(matches[1]) : null;
+    },
+
+    verifySession() {
+      axios.get('http://localhost:8000/api/user').then(response => {
+        this.loggedIn = true;
+        console.log("Hello");
+      })
+      .catch(error => {
+        this.loggedIn = false;
+      })
+    }
+
+  },
 }
 </script>
 
 <template>
-  <div class="flex min-h-full flex-col justify-center px-6 pt-48 pb-10 lg:px-8">
+  <div class="flex min-h-full flex-col justify-center px-6 pt-48 pb-10 lg:px-8" v-if="!loggedIn">
   <div class="sm:mx-auto sm:w-full sm:max-w-sm">
     <h2 class="mt-10 text-center text-2xl/9 font-bold tracking-tight text-gray-900">Accedi al Back Office</h2>
   </div>
@@ -55,7 +99,11 @@ export default {
       </div>
     </form>
   </div>
-</div>
+  </div>
+
+  <div v-if="loggedIn">
+    <button @click="userLogout" class="border p-2 m-3 rounded-lg bg-black text-white">Logout</button>
+  </div>
 </template>
 
 <style scoped>
